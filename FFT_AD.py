@@ -1,9 +1,10 @@
 import numpy as np 
 import matplotlib.pyplot as plt 
 import pandas as pd
+from scipy.signal import get_window
 plt.close('all')
 #--------------- Code ------------------------#
-def fft_np(Acc,fs):
+def fft_np(Acc,fs,window):
     
     Nfft =  int(Acc.shape[0]/2)+1
     if Acc.shape[1] == 1:
@@ -13,7 +14,7 @@ def fft_np(Acc,fs):
         frange = np.linspace(0, fs/2,Nfft)    
         return frange,Yxx
     else:
-        _Yxx = ((1/(fs*2*np.pi*Nfft))**0.5)*np.fft.fft(Acc,axis = 0)
+        _Yxx = ((1/(fs*2*np.pi*Nfft))**0.5)*np.fft.fft((Acc.T*get_window(window,Acc.shape[0])).T,axis = 0)
         Yxx = _Yxx[:Nfft,:]
         frange = np.linspace(0, fs/2,Nfft) 
         return frange,Yxx
@@ -54,12 +55,22 @@ Acc1 = pd.read_csv('Vib2018-12-07(11_02_40)_3.csv')
 fs = 100
 _Acc = Acc1[['X vibration (m/s^2)','Y vibration (m/s^2)','Z vibration (m/s^2)']].to_numpy()
 Acc = _Acc[2500:20000,:]
-plt.figure()
-plt.plot(Acc)
-plt.figure()
-frange,Yxx =  fft_np(Acc,fs)
+
+frange,Yxx =  fft_np(Acc,fs,'boxcar')
 PSD,TrPSD = PSD_M(Yxx)
-Plot_PSD_M(frange,PSD,0.1,20)
+# Plot_PSD_M(frange,PSD,0.1,20,colors = ['black','grey','lightgray'],)
+
+
+plt.plot(frange,TrPSD,color = 'r')
+ 
+plt.yscale('log')
+plt.axis('tight')
+plt.xlabel('Frequency [Hz]')
+plt.ylabel('[Energy dB]')
+
+plt.yscale('log')
+plt.axis('tight')
+plt.xlim([0.1,20])
 
 
 
